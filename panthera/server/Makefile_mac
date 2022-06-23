@@ -1,0 +1,60 @@
+
+
+CXX = g++
+
+
+# This should point to where BOOST is install
+BOOST_ROOT=/opt/boost
+
+
+INC_DIRS = -I"." -I"$(BOOST_ROOT)/include" 
+LIB_DIRS = -L"$(BOOST_ROOT)/lib" 
+
+
+# Is this a debug build
+CXXFLAGS = -O0 -pthread -ggdb3 -fPIC -std=c++17
+# This is release mode
+#CXXFLAGS = -O3 -pthread -fPIC -fomit-frame-pointer -march=native -Wno-write-strings -ffloat-store -ffast-math -fno-math-errno -std=c++17
+
+
+# This includes multiple Boost libraries
+#LDFLAGS = -pthread -lrt -ldl -lboost_system -lboost_thread -lboost_filesystem -lboost_date_time 
+# This includes only basic libraries
+# LDFLAGS = -pthread -lrt -ldl
+LDFLAGS = -pthread -ldl
+
+
+# Use this for multiple directories
+csrc =	$(wildcard src/*.cpp) 
+obj = 	$(csrc:.cpp=.o)
+dep = 	$(wildcard src/*.h)
+deps =	$(dep:.h=.d)
+
+
+.cpp.o:
+		$(CXX) -c $(CXXFLAGS) $(INC_DIRS) $< -o $@
+
+bin/server: $(obj)
+		$(CXX) $(LIB_DIRS) -o $@ $^ $(LDFLAGS)
+#		$(CXX) $(LIBPATH) -Wl,-rpath,../lib -o $@ $^ $(LDFLAGS)
+
+-include $(deps)
+%.d: %.cpp
+		@$(CXX) $(CXXFLAGS) $(INC_DIRS) $< -MM -MT $(@:.d=.o) >$@
+
+
+.PHONY: clean
+clean:
+		rm -f bin/server $(obj)
+
+.PHONY: cleandep
+cleandep:
+		rm -f $(deps)
+
+.PHONY: cleanall
+cleanall:
+		rm -f bin/server $(obj)
+		rm -f $(deps)
+
+
+
